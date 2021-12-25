@@ -6,13 +6,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm, RegisterForm
+from forms import CreatePostForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
+
+login_manager = LoginManager()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 ckeditor = CKEditor(app)
 Bootstrap(app)
+
+login_manager.init_app(app)
 
 # CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
@@ -46,15 +50,25 @@ class User(UserMixin, db.Model):
 db.create_all()
 
 
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(id)
+
+
 @app.route('/')
 def get_all_posts():
     posts = BlogPost.query.all()
-    return render_template("index.html", all_posts=posts)
+    return render_template("index.html", all_posts=posts, logged_in=current_user.is_authenticated)
 
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
     register_form = RegisterForm()
+    if User.query.filter_by(email=register_form.email.data).first():
+        # Send flash messsage
+        flash("You've already signed up with that email, log in instead!")
+        # Redirect to /login route.
+        return redirect(url_for('login'))
     if register_form.validate_on_submit():
         password = register_form.password.data
         hashed_password = generate_password_hash(
@@ -67,16 +81,35 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('get_all_posts'))
-    return render_template("register.html", form=register_form)
+    return render_template("register.html", form=register_form, logged_in=current_user.is_authenticated)
 
 
-@app.route('/login')
+@app.route('/login', methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    login_form = LoginForm()
+    if login_form.validate_on_submit():
+        error = None
+        password = login_form.password.data
+        email = login_form.email.data
+        user = User.query.filter_by(email=email).first()
+        try:
+            user_password = user.password
+            if check_password_hash(user_password, password):
+                login_user(user)
+                return render_template("index.html", user=user, logged_in=current_user.is_authenticated)
+            elif check_password_hash(user_password, password) == False:
+                error = "Password incorect. Pleace try again"
+                return render_template("login.html", form=login_form, error=error)
+        except AttributeError:
+            error = "That email does not exist, please try again."
+            return render_template("login.html", form=login_form, error=error)
+
+    return render_template("login.html", form=login_form)
 
 
 @app.route('/logout')
 def logout():
+    logout_user()
     return redirect(url_for('get_all_posts'))
 
 
