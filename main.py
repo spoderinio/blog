@@ -9,6 +9,7 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreatePostForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
 from functools import wraps
+from sqlalchemy import Table, Column, Integer, ForeignKey
 
 login_manager = LoginManager()
 
@@ -26,11 +27,22 @@ db = SQLAlchemy(app)
 
 
 # CONFIGURE TABLES
+class User(UserMixin, db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(100))
+    name = db.Column(db.String(1000))
+
+    posts = relationship("BlogPost", back_populates="author")
+
 
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id = db.Column(db.Integer, primary_key=True)
-    author = db.Column(db.String(250), nullable=False)
+    author_id = db.Column(db.Integer, ForeignKey('users.id'))
+    author = relationship("User", back_populates="posts")
+    # author = db.Column(db.String(250), nullable=False)
     title = db.Column(db.String(250), unique=True, nullable=False)
     subtitle = db.Column(db.String(250), nullable=False)
     date = db.Column(db.String(250), nullable=False)
@@ -38,15 +50,7 @@ class BlogPost(db.Model):
     img_url = db.Column(db.String(250), nullable=False)
 
 
-db.create_all()
-
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    name = db.Column(db.String(1000))
-
+# db.create_all()
 
 db.create_all()
 
@@ -156,7 +160,7 @@ def contact():
     return render_template("contact.html")
 
 
-@app.route("/new-post")
+@app.route("/new-post", methods=["GET", "POST"])
 @admin_only
 def add_new_post():
     form = CreatePostForm()
@@ -175,7 +179,7 @@ def add_new_post():
     return render_template("make-post.html", form=form, logged_in=current_user.is_authenticated)
 
 
-@app.route("/edit-post/<int:post_id>")
+@app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 @admin_only
 def edit_post(post_id):
     post = BlogPost.query.get(post_id)
@@ -183,7 +187,7 @@ def edit_post(post_id):
         title=post.title,
         subtitle=post.subtitle,
         img_url=post.img_url,
-        author=post.author,
+        author=post.author.name,
         body=post.body
     )
     if edit_form.validate_on_submit():
