@@ -9,6 +9,7 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreatePostForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
 
+
 login_manager = LoginManager()
 
 app = Flask(__name__)
@@ -57,8 +58,16 @@ def load_user(id):
 
 @app.route('/')
 def get_all_posts():
+
     posts = BlogPost.query.all()
-    return render_template("index.html", all_posts=posts, logged_in=current_user.is_authenticated)
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        # return f"User is {user_id}"
+        if user_id == 1:
+            return render_template("index.html", all_posts=posts, admin=user_id, logged_in=current_user.is_authenticated)
+        else:
+            return render_template("index.html", all_posts=posts, logged_in=current_user.is_authenticated)
+    return render_template("index.html", all_posts=posts)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -96,7 +105,8 @@ def login():
             user_password = user.password
             if check_password_hash(user_password, password):
                 login_user(user)
-                return render_template("index.html", user=user, logged_in=current_user.is_authenticated)
+                # return render_template("index.html", user=user, logged_in=current_user.is_authenticated)
+                return redirect(url_for('get_all_posts'))
             elif check_password_hash(user_password, password) == False:
                 error = "Password incorect. Pleace try again"
                 return render_template("login.html", form=login_form, error=error)
