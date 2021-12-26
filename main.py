@@ -126,7 +126,13 @@ def logout():
 @app.route("/post/<int:post_id>")
 def show_post(post_id):
     requested_post = BlogPost.query.get(post_id)
-    return render_template("post.html", post=requested_post)
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        # return f"User is {user_id}"
+        if user_id == 1:
+            return render_template("post.html", post=requested_post, admin=user_id, logged_in=current_user.is_authenticated)
+
+    return render_template("post.html", post=requested_post, logged_in=current_user.is_authenticated)
 
 
 @app.route("/about")
@@ -154,7 +160,7 @@ def add_new_post():
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for("get_all_posts"))
-    return render_template("make-post.html", form=form)
+    return render_template("make-post.html", form=form, logged_in=current_user.is_authenticated)
 
 
 @app.route("/edit-post/<int:post_id>")
@@ -174,9 +180,9 @@ def edit_post(post_id):
         post.author = edit_form.author.data
         post.body = edit_form.body.data
         db.session.commit()
-        return redirect(url_for("show_post", post_id=post.id))
+        return redirect(url_for("show_post", post_id=post.id), logged_in=current_user.is_authenticated)
 
-    return render_template("make-post.html", form=edit_form)
+    return render_template("make-post.html", form=edit_form, logged_in=current_user.is_authenticated)
 
 
 @app.route("/delete/<int:post_id>")
@@ -184,7 +190,7 @@ def delete_post(post_id):
     post_to_delete = BlogPost.query.get(post_id)
     db.session.delete(post_to_delete)
     db.session.commit()
-    return redirect(url_for('get_all_posts'))
+    return redirect(url_for('get_all_posts', logged_in=current_user.is_authenticated))
 
 
 if __name__ == "__main__":
