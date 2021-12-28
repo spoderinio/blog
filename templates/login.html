@@ -25,9 +25,18 @@
   <div class="row">
 
     <div class="col-lg-8 col-md-10 mx-auto content">
+      <!-- WITH FLASH MESSAGES -->
+      {% with message = get_flashed_messages() %}
+      {% if message %}
+      {{ message[0] }}
+      {% endif %}
+      {% endwith %}
+
+      <!-- THE DUMMY METHOD -->
       {% if error %}
       <p class=error><strong>Error:</strong> {{ error }}
         {% endif %}
+
         {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
     </div>
   </div>
