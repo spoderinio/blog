@@ -31,7 +31,8 @@ gravatar = Gravatar(app,
 login_manager.init_app(app)
 
 # CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    "DATABASE_URL", "sqlite:///blog.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -226,7 +227,7 @@ def edit_post(post_id):
         post.img_url = edit_form.img_url.data
         post.body = edit_form.body.data
         db.session.commit()
-        return redirect(url_for("show_post", post_id=post.id), logged_in=current_user.is_authenticated)
+        return redirect(url_for("show_post", post_id=post.id))
 
     return render_template("make-post.html", form=edit_form, logged_in=current_user.is_authenticated)
 
