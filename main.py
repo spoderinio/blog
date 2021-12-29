@@ -13,7 +13,7 @@ from sqlalchemy import Table, Column, Integer, ForeignKey
 import os
 
 login_manager = LoginManager()
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 ckeditor = CKEditor(app)
