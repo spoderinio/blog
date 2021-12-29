@@ -15,7 +15,7 @@ import os
 login_manager = LoginManager()
 SECRET_KEY = os.environ.get("SECRET_KEY")
 app = Flask(__name__)
-app.config['SECRET_KEY']
+app.config['SECRET_KEY'] = SECRET_KEY
 ckeditor = CKEditor(app)
 Bootstrap(app)
 
@@ -241,4 +241,4 @@ def delete_post(post_id):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=True)
