@@ -45,7 +45,8 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100))
     posts = relationship("BlogPost", back_populates="author",
                          order_by="BlogPost.date")
-    comments = relationship("Comment", back_populates="comment_author")
+    comments = relationship(
+        "Comment", back_populates="comment_author", order_by="BlogPost.date")
 
 
 class BlogPost(db.Model):
