@@ -43,7 +43,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
     name = db.Column(db.String(100))
-    posts = relationship("BlogPost", back_populates="author")
+    posts = relationship("BlogPost", back_populates="author",
+                         order_by="BlogPost.date")
     comments = relationship("Comment", back_populates="comment_author")
 
 
@@ -92,7 +93,7 @@ def admin_only(function):
 @app.route('/')
 def get_all_posts():
 
-    posts = BlogPost.query.all().order_by(BlogPost.date)
+    posts = BlogPost.query.all()
     if current_user.is_authenticated:
         user_id = current_user.id
         # return f"User is {user_id}"
