@@ -9,7 +9,6 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from flask_gravatar import Gravatar
 from functools import wraps
-from sqlalchemy import Table, Column, Integer, ForeignKey
 import os
 
 login_manager = LoginManager()
@@ -93,7 +92,7 @@ def admin_only(function):
 @app.route('/')
 def get_all_posts():
 
-    posts = BlogPost.query.all()
+    posts = BlogPost.query.all().order_by(BlogPost.date)
     if current_user.is_authenticated:
         user_id = current_user.id
         # return f"User is {user_id}"
